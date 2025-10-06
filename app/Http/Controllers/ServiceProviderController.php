@@ -2,63 +2,59 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ServiceProvider;
 use Illuminate\Http\Request;
 
 class ServiceProviderController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $serviceProviders = ServiceProvider::latest()->get();
+        return view('admin.service-providers.index', compact('serviceProviders'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return view('admin.service-providers.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'nullable|email|unique:service_providers',
+            'phone' => 'nullable|string|max:255',
+        ]);
+
+        ServiceProvider::create($request->all());
+        return redirect()->route('admin.service-providers.index')->with('success', 'Service provider created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show(ServiceProvider $serviceProvider)
     {
-        //
+        return view('admin.service-providers.show', compact('serviceProvider'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function edit(ServiceProvider $serviceProvider)
     {
-        //
+        return view('admin.service-providers.edit', compact('serviceProvider'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, ServiceProvider $serviceProvider)
     {
-        //
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'nullable|email|unique:service_providers,email,' . $serviceProvider->id,
+            'phone' => 'nullable|string|max:255',
+        ]);
+
+        $serviceProvider->update($request->all());
+        return redirect()->route('admin.service-providers.index')->with('success', 'Service provider updated successfully.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(ServiceProvider $serviceProvider)
     {
-        //
+        $serviceProvider->delete();
+        return redirect()->route('admin.service-providers.index')->with('success', 'Service provider deleted successfully.');
     }
 }

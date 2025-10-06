@@ -2,63 +2,52 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Setting;
 use Illuminate\Http\Request;
 
 class SettingController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $settings = Setting::all();
+        return view('admin.settings.index', compact('settings'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return view('admin.settings.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'key' => 'required|string|unique:settings',
+            'value' => 'nullable|string',
+            'type' => 'required|in:string,boolean,integer,json',
+        ]);
+
+        Setting::create($request->all());
+        return redirect()->route('admin.settings.index')->with('success', 'Setting created successfully.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function edit(Setting $setting)
     {
-        //
+        return view('admin.settings.edit', compact('setting'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(Request $request, Setting $setting)
     {
-        //
+        $request->validate([
+            'value' => 'nullable|string',
+        ]);
+
+        $setting->update($request->only('value'));
+        return redirect()->route('admin.settings.index')->with('success', 'Setting updated successfully.');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(Setting $setting)
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        $setting->delete();
+        return redirect()->route('admin.settings.index')->with('success', 'Setting deleted successfully.');
     }
 }
