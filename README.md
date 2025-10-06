@@ -19,6 +19,8 @@ A comprehensive Laravel-based Point of Sale (POS) system with the following feat
 
 ## Installation
 
+### Standard Installation
+
 1. Clone the repository:
 ```bash
 git clone https://github.com/afaryab/point-of-sale.git
@@ -49,6 +51,30 @@ php artisan db:seed --class=InitialDataSeeder
 ```bash
 php artisan serve
 ```
+
+### Docker Installation
+
+The application can be run in Docker containers for production deployment.
+
+1. Build the Docker image:
+```bash
+docker build -t point-of-sale .
+```
+
+2. Run the container:
+```bash
+docker run -d -p 80:80 \
+  -e APP_KEY=base64:your-app-key-here \
+  -e DB_CONNECTION=sqlite \
+  --name pos-app \
+  point-of-sale
+```
+
+3. Access the application at `http://localhost`
+
+#### Using Docker Compose (Coming Soon)
+
+For easier setup with database and other services, a `docker-compose.yml` file will be provided.
 
 ## Default Credentials
 
@@ -122,6 +148,32 @@ The system uses the following main tables:
 - Tailwind CSS
 - Alpine.js
 - SQLite (default, can be changed to MySQL/PostgreSQL)
+
+## CI/CD
+
+This project uses GitHub Actions for continuous integration and deployment:
+
+### Automated Testing
+- **Tests Workflow**: Runs on push to master and on all pull requests
+  - Builds frontend assets with `npm run build`
+  - Runs PHPUnit tests across multiple PHP versions (8.2, 8.3, 8.4)
+
+### Pull Request Validation  
+- **PR Validation Workflow**: Validates all pull requests to main/master branch
+  - Ensures code quality before merging
+  - Runs tests across multiple PHP versions
+
+### Docker Image Release
+- **Docker Release Workflow**: Automatically builds and publishes Docker images
+  - Triggers on push to main/master branch
+  - Publishes images to GitHub Container Registry (ghcr.io)
+  - Tags images with branch name, commit SHA, and `latest` tag
+  - Uses GitHub Actions cache for faster builds
+
+To pull the latest Docker image:
+```bash
+docker pull ghcr.io/afaryab/point-of-sale:latest
+```
 
 ## License
 
