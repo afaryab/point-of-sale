@@ -25,24 +25,49 @@ class BillController extends Controller
         $products = Product::where('is_active', true)->get();
         $services = Service::where('is_active', true)->get();
         $plans = Plan::where('is_active', true)->get();
+        $serviceProviders = \App\Models\ServiceProvider::all();
         
         $defaultPaymentType = Setting::where('key', 'default_payment_type')->first();
         $paymentType = $defaultPaymentType ? $defaultPaymentType->value : 'prepaid';
         
-        return view('bills.create', compact('counters', 'products', 'services', 'plans', 'paymentType'));
+        return view('bills.create', compact('counters', 'products', 'services', 'plans', 'serviceProviders', 'paymentType'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'counter_id' => 'nullable|exists:counters,id',
-            'customer_name' => 'nullable|string|max:255',
+            'customer_id' => 'nullable|exists:customers,id',
+            'customer_name' => 'required_without:customer_id|string|max:255',
             'customer_phone' => 'nullable|string|max:255',
+            'customer_gender' => 'nullable|in:male,female,other',
+            'customer_relation_type' => 'nullable|in:S/O,D/O,W/O',
+            'customer_relation_name' => 'nullable|string|max:255',
+            'customer_cnic' => 'nullable|string|max:255',
+            'customer_dob' => 'nullable|date',
+            'customer_age' => 'nullable|integer|min:0|max:150',
             'items' => 'required|array|min:1',
             'items.*.type' => 'required|in:product,service,plan',
             'items.*.id' => 'required|integer',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
+
+        $customerId = $request->customer_id;
+
+        // If no customer selected, create a new customer
+        if (!$customerId && $request->customer_name) {
+            $customer = \App\Models\Customer::create([
+                'name' => $request->customer_name,
+                'gender' => $request->customer_gender,
+                'relation_type' => $request->customer_relation_type,
+                'relation_name' => $request->customer_relation_name,
+                'phone' => $request->customer_phone,
+                'cnic' => $request->customer_cnic,
+                'date_of_birth' => $request->customer_dob,
+                'age' => $request->customer_age,
+            ]);
+            $customerId = $customer->id;
+        }
 
         $subtotal = 0;
         $billItems = [];
@@ -79,6 +104,7 @@ class BillController extends Controller
         $bill = Bill::create([
             'counter_id' => $request->counter_id,
             'user_id' => auth()->id(),
+            'customer_id' => $customerId,
             'customer_name' => $request->customer_name,
             'customer_phone' => $request->customer_phone,
             'subtotal' => $subtotal,
